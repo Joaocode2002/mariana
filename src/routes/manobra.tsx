@@ -6,6 +6,7 @@ import { EmergencyButton } from "@/components/EmergencyButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
   getOperador,
   saveRegistro,
@@ -62,6 +63,7 @@ type Respostas = Record<string, boolean>;
 
 function ManobraPage() {
   const router = useRouter();
+  const { ready } = useRequireAuth();
   const [operador, setOperadorState] = useState<Operador | null>(null);
   const [step, setStep] = useState<Step>("aptidao");
   const [aptidao, setAptidao] = useState<Respostas>({});
@@ -72,6 +74,7 @@ function ManobraPage() {
   const [countdown, setCountdown] = useState<number>(10);
 
   useEffect(() => {
+    if (!ready) return;
     void getOperador().then((op) => {
       if (!op) {
         router.navigate({ to: "/auth" });
@@ -79,7 +82,7 @@ function ManobraPage() {
       }
       setOperadorState(op);
     });
-  }, [router]);
+  }, [ready, router]);
 
   useEffect(() => {
     if (!autorizado) return;
@@ -95,7 +98,7 @@ function ManobraPage() {
     return 100;
   }, [step]);
 
-  if (!operador) return null;
+  if (!ready || !operador) return null;
 
   const avaliar = (
     items: ChecklistItem[],
