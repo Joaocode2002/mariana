@@ -1,5 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "framework": null,
-  "outputDirectory": ".vercel/output"
+  "buildCommand": "vite build",
+  "outputDirectory": "dist/client",
+  "rewrites": [
+    { "source": "/((?!assets/|favicon\\.ico).*)", "destination": "/api" }
+  ]
 }
