@@ -85,7 +85,9 @@ function HistoricoPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mx-auto max-w-5xl space-y-6">
+
         <header>
           <h1 className="text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
             Histórico de Manobras
@@ -165,7 +167,9 @@ function HistoricoPage() {
             ))}
           </ul>
         )}
+        </div>
       </main>
+
     </div>
   );
 }

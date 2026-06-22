@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
+  getCachedOperador,
   getOperador,
   saveRegistro,
   type Operador,
@@ -20,8 +21,7 @@ export const Route = createFileRoute("/manobra")({
       { title: "Nova Manobra — Zona Segura de Manobra" },
       {
         name: "description",
-        content:
-          "Execute o checklist de aptidão, inspeção da área e comunicação operacional.",
+        content: "Execute o checklist de aptidão, inspeção da área e comunicação operacional.",
       },
     ],
   }),
@@ -64,7 +64,7 @@ type Respostas = Record<string, boolean>;
 function ManobraPage() {
   const router = useRouter();
   const { ready } = useRequireAuth();
-  const [operador, setOperadorState] = useState<Operador | null>(null);
+  const [operador, setOperadorState] = useState<Operador | null>(() => getCachedOperador());
   const [step, setStep] = useState<Step>("aptidao");
   const [aptidao, setAptidao] = useState<Respostas>({});
   const [area, setArea] = useState<Respostas>({});
@@ -75,6 +75,12 @@ function ManobraPage() {
 
   useEffect(() => {
     if (!ready) return;
+    const cached = getCachedOperador();
+    if (cached) {
+      setOperadorState(cached);
+      return;
+    }
+
     void getOperador().then((op) => {
       if (!op) {
         router.navigate({ to: "/auth" });
@@ -98,7 +104,7 @@ function ManobraPage() {
     return 100;
   }, [step]);
 
-  if (!ready || !operador) return null;
+  if (!ready) return null;
 
   const avaliar = (
     items: ChecklistItem[],
@@ -180,143 +186,149 @@ function ManobraPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Operador: {operador.nome} · {operador.cargo}
-          </p>
-          <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
-            Validação de Manobra
-          </h1>
-          <div
-            className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuenow={progresso}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${progresso}%` }}
-            />
-          </div>
-        </div>
-
-        {step === "aptidao" && (
-          <ChecklistSection
-            title="1. Aptidão do Trabalhador"
-            items={APTIDAO}
-            respostas={aptidao}
-            onChange={setAptidao}
-            onNext={handleNextAptidao}
-          />
-        )}
-        {step === "area" && (
-          <ChecklistSection
-            title="2. Inspeção da Área de Manobra"
-            items={AREA}
-            respostas={area}
-            onChange={setArea}
-            onNext={handleNextArea}
-          />
-        )}
-        {step === "comunicacao" && (
-          <ChecklistSection
-            title="3. Comunicação Operacional"
-            items={COMUNICACAO}
-            respostas={comunicacao}
-            onChange={setComunicacao}
-            onNext={handleFinalizar}
-            nextLabel="Finalizar e autorizar"
-          />
-        )}
-
-        {step === "resultado" && bloqueado && (
-          <Card className="border-danger bg-danger/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-danger">
-                <AlertTriangle className="h-7 w-7" />
-                {bloqueado.etapa === "emergencia"
-                  ? "MANOBRA INTERROMPIDA"
-                  : "Operação não autorizada"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-foreground">{bloqueado.motivo}</p>
-              {bloqueado.etapa !== "emergencia" && (
-                <p className="text-sm text-muted-foreground">
-                  Solicite o acionamento do supervisor imediatamente.
-                </p>
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+              {operador ? (
+                <>
+                  Operador: {operador.nome} · {operador.cargo}
+                </>
+              ) : (
+                <span className="invisible">Operador: —</span>
               )}
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => router.navigate({ to: "/painel" })} variant="outline">
+            </p>
+            <h1 className="mt-1 text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
+              Validação de Manobra
+            </h1>
+            <div
+              className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-valuenow={progresso}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${progresso}%` }}
+              />
+            </div>
+          </div>
+
+          {step === "aptidao" && (
+            <ChecklistSection
+              title="1. Aptidão do Trabalhador"
+              items={APTIDAO}
+              respostas={aptidao}
+              onChange={setAptidao}
+              onNext={handleNextAptidao}
+            />
+          )}
+          {step === "area" && (
+            <ChecklistSection
+              title="2. Inspeção da Área de Manobra"
+              items={AREA}
+              respostas={area}
+              onChange={setArea}
+              onNext={handleNextArea}
+            />
+          )}
+          {step === "comunicacao" && (
+            <ChecklistSection
+              title="3. Comunicação Operacional"
+              items={COMUNICACAO}
+              respostas={comunicacao}
+              onChange={setComunicacao}
+              onNext={handleFinalizar}
+              nextLabel="Finalizar e autorizar"
+            />
+          )}
+
+          {step === "resultado" && bloqueado && (
+            <Card className="border-danger bg-danger/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-danger">
+                  <AlertTriangle className="h-7 w-7" />
+                  {bloqueado.etapa === "emergencia"
+                    ? "MANOBRA INTERROMPIDA"
+                    : "Operação não autorizada"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-foreground">{bloqueado.motivo}</p>
+                {bloqueado.etapa !== "emergencia" && (
+                  <p className="text-sm text-muted-foreground">
+                    Solicite o acionamento do supervisor imediatamente.
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => router.navigate({ to: "/painel" })} variant="outline">
+                    Voltar ao painel
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setBloqueado(null);
+                      setAptidao({});
+                      setArea({});
+                      setComunicacao({});
+                      setStep("aptidao");
+                    }}
+                  >
+                    Reiniciar checklist
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {step === "resultado" && autorizado && !bloqueado && (
+            <Card className="border-success bg-success/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-success">
+                  <CheckCircle2 className="h-7 w-7" />
+                  MANOBRA AUTORIZADA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col items-center gap-4 py-6">
+                  <div
+                    className="flex h-32 w-32 items-center justify-center rounded-full bg-primary animate-giroflex"
+                    aria-label="Giroflex em operação"
+                  >
+                    <Radio className="h-12 w-12 text-primary-foreground animate-siren" />
+                  </div>
+                  <p className="text-center text-6xl font-black tabular-nums text-foreground">
+                    {countdown}s
+                  </p>
+                  <p className="text-sm uppercase tracking-widest text-muted-foreground">
+                    {countdown > 0 ? "Iniciando manobra" : "Manobra em andamento"}
+                  </p>
+                </div>
+                <div className="grid gap-2 rounded-lg bg-card p-4 text-sm">
+                  <p>
+                    <span className="text-muted-foreground">Responsável:</span>{" "}
+                    <strong className="text-foreground">{autorizado.operador.nome}</strong>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Cargo:</span>{" "}
+                    <strong className="text-foreground">{autorizado.operador.cargo}</strong>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Data/Hora:</span>{" "}
+                    <strong className="text-foreground">
+                      {new Date(autorizado.dataHora).toLocaleString("pt-BR")}
+                    </strong>
+                  </p>
+                </div>
+                <Button onClick={() => router.navigate({ to: "/painel" })} className="w-full">
                   Voltar ao painel
                 </Button>
-                <Button
-                  onClick={() => {
-                    setBloqueado(null);
-                    setAptidao({});
-                    setArea({});
-                    setComunicacao({});
-                    setStep("aptidao");
-                  }}
-                >
-                  Reiniciar checklist
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          )}
 
-        {step === "resultado" && autorizado && !bloqueado && (
-          <Card className="border-success bg-success/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3 text-success">
-                <CheckCircle2 className="h-7 w-7" />
-                MANOBRA AUTORIZADA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center gap-4 py-6">
-                <div
-                  className="flex h-32 w-32 items-center justify-center rounded-full bg-primary animate-giroflex"
-                  aria-label="Giroflex em operação"
-                >
-                  <Radio className="h-12 w-12 text-primary-foreground animate-siren" />
-                </div>
-                <p className="text-center text-6xl font-black tabular-nums text-foreground">
-                  {countdown}s
-                </p>
-                <p className="text-sm uppercase tracking-widest text-muted-foreground">
-                  {countdown > 0 ? "Iniciando manobra" : "Manobra em andamento"}
-                </p>
-              </div>
-              <div className="grid gap-2 rounded-lg bg-card p-4 text-sm">
-                <p>
-                  <span className="text-muted-foreground">Responsável:</span>{" "}
-                  <strong className="text-foreground">{autorizado.operador.nome}</strong>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Cargo:</span>{" "}
-                  <strong className="text-foreground">{autorizado.operador.cargo}</strong>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Data/Hora:</span>{" "}
-                  <strong className="text-foreground">
-                    {new Date(autorizado.dataHora).toLocaleString("pt-BR")}
-                  </strong>
-                </p>
-              </div>
-              <Button onClick={() => router.navigate({ to: "/painel" })} className="w-full">
-                Voltar ao painel
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {step !== "resultado" && (
-          <EmergencyButton onTrigger={handleEmergencia} />
-        )}
+          {step !== "resultado" && <EmergencyButton onTrigger={handleEmergencia} />}
+        </div>
       </main>
     </div>
   );
@@ -372,12 +384,7 @@ function ChecklistSection({
             </div>
           </fieldset>
         ))}
-        <Button
-          onClick={onNext}
-          disabled={!todasRespondidas}
-          size="lg"
-          className="w-full"
-        >
+        <Button onClick={onNext} disabled={!todasRespondidas} size="lg" className="w-full">
           {nextLabel} <ChevronRight className="ml-1 h-5 w-5" />
         </Button>
       </CardContent>

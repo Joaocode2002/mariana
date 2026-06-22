@@ -34,10 +34,73 @@ export interface Indicadores {
 
 /* ============ AUTH ============ */
 
+let operadorCache: Operador | null = null;
+let operadorRequest: Promise<Operador | null> | null = null;
+const OPERADOR_CACHE_KEY = "zsm:operador";
+
+function isOperador(value: unknown): value is Operador {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<Record<keyof Operador, unknown>>;
+  return (
+    typeof candidate.id === "string" &&
+    typeof candidate.nome === "string" &&
+    typeof candidate.matricula === "string" &&
+    typeof candidate.cargo === "string"
+  );
+}
+
+function readStoredOperador(): Operador | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(OPERADOR_CACHE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return isOperador(parsed) ? parsed : null;
+  } catch {
+    window.sessionStorage.removeItem(OPERADOR_CACHE_KEY);
+    return null;
+  }
+}
+
+function setOperadorCache(operador: Operador): void {
+  operadorCache = operador;
+  if (typeof window === "undefined") return;
+  window.sessionStorage.setItem(OPERADOR_CACHE_KEY, JSON.stringify(operador));
+}
+
+export function getCachedOperador(): Operador | null {
+  if (operadorCache) return operadorCache;
+  operadorCache = readStoredOperador();
+  return operadorCache;
+}
+
+export function clearOperadorCache(): void {
+  operadorCache = null;
+  operadorRequest = null;
+  if (typeof window !== "undefined") {
+    window.sessionStorage.removeItem(OPERADOR_CACHE_KEY);
+  }
+}
+
 export async function getOperador(): Promise<Operador | null> {
+  const cached = getCachedOperador();
+  if (cached) return cached;
+  if (operadorRequest) return operadorRequest;
+
+  operadorRequest = loadOperador().finally(() => {
+    operadorRequest = null;
+  });
+
+  return operadorRequest;
+}
+
+async function loadOperador(): Promise<Operador | null> {
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData.session?.user;
-  if (!user) return null;
+  if (!user) {
+    clearOperadorCache();
+    return null;
+  }
 
   const { data, error } = await supabase
     .from("profiles")
@@ -46,7 +109,9 @@ export async function getOperador(): Promise<Operador | null> {
     .maybeSingle();
 
   if (error || !data) return null;
-  return data as Operador;
+  const operador = data as Operador;
+  setOperadorCache(operador);
+  return operador;
 }
 
 /**
@@ -59,11 +124,13 @@ function matriculaToEmail(matricula: string): string {
 }
 
 export async function signIn(matricula: string, password: string): Promise<void> {
+  clearOperadorCache();
   const { error } = await supabase.auth.signInWithPassword({
     email: matriculaToEmail(matricula),
     password,
   });
   if (error) throw new Error("Matrícula ou senha inválida");
+  await getOperador();
 }
 
 export async function signUp(params: {
@@ -92,8 +159,8 @@ export async function signUp(params: {
   }
 }
 
-
 export async function signOut(): Promise<void> {
+  clearOperadorCache();
   await supabase.auth.signOut();
 }
 

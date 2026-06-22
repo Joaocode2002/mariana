@@ -46,20 +46,36 @@ const STATUS_TEXT: Record<StatusManobra, string> = {
   bloqueada: "text-danger",
 };
 
+interface PainelCache {
+  registros: RegistroManobra[];
+  status: StatusManobra;
+  indicadores: { diasSemAcidentes: number; diasSemInvasao: number };
+  loaded: boolean;
+}
+
+const painelCache: PainelCache = {
+  registros: [],
+  status: "verificacao",
+  indicadores: { diasSemAcidentes: 0, diasSemInvasao: 0 },
+  loaded: false,
+};
+
 function DashboardPage() {
   const router = useRouter();
   const { ready } = useRequireAuth();
-  const [registros, setRegistros] = useState<RegistroManobra[]>([]);
-  const [status, setStatus] = useState<StatusManobra>("verificacao");
-  const [indicadores, setIndicadoresState] = useState({
-    diasSemAcidentes: 0,
-    diasSemInvasao: 0,
-  });
+  const [registros, setRegistros] = useState<RegistroManobra[]>(painelCache.registros);
+  const [status, setStatus] = useState<StatusManobra>(painelCache.status);
+  const [indicadores, setIndicadoresState] = useState(painelCache.indicadores);
 
   const refresh = async (): Promise<void> => {
     const [all, ind] = await Promise.all([getRegistros(), getIndicadores()]);
+    const nextStatus = all[0]?.status ?? "verificacao";
+    painelCache.registros = all;
+    painelCache.status = nextStatus;
+    painelCache.indicadores = ind;
+    painelCache.loaded = true;
     setRegistros(all);
-    setStatus(all[0]?.status ?? "verificacao");
+    setStatus(nextStatus);
     setIndicadoresState(ind);
   };
 
@@ -109,7 +125,7 @@ function DashboardPage() {
 
     <div className="min-h-screen bg-background">
 
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-3 sm:gap-6 sm:p-4 lg:grid-cols-12 lg:p-8">
+      <main className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 px-4 py-6 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-12 lg:px-8">
         {/* === COLUNA ESQUERDA: STATUS + KPIs === */}
         <div className="space-y-4 sm:space-y-6 lg:col-span-8">
           {/* Bloco de status — Command Mobile */}

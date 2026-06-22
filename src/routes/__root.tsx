@@ -141,9 +141,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background">
         {showHeader ? <AppHeader /> : null}
-        <div key={pathname} className="animate-fade-in">
-          <Outlet />
-        </div>
+        <Outlet />
       </div>
     </QueryClientProvider>
   );
