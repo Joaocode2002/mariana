@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 
 
-import { AppHeader } from "@/components/AppHeader";
 import { EmergencyButton } from "@/components/EmergencyButton";
 import { getRegistroStatusLabel } from "@/components/StatusIndicator";
 import {
@@ -109,7 +108,6 @@ function DashboardPage() {
   return (
 
     <div className="min-h-screen bg-background">
-      <AppHeader />
 
       <main className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-3 sm:gap-6 sm:p-4 lg:grid-cols-12 lg:p-8">
         {/* === COLUNA ESQUERDA: STATUS + KPIs === */}

@@ -2,7 +2,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Radio } from "lucide-react";
 
-import { AppHeader } from "@/components/AppHeader";
 import { EmergencyButton } from "@/components/EmergencyButton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -178,7 +177,6 @@ function ManobraPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader />
       <main className="mx-auto max-w-3xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">

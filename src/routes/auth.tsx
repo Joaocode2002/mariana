@@ -28,12 +28,23 @@ export const Route = createFileRoute("/auth")({
 const CARGOS = ["Maquinista", "Manobrista", "Supervisor", "Manutenção"] as const;
 
 const loginSchema = z.object({
-  matricula: z.string().trim().min(2, "Informe a matrícula").max(20),
-  password: z.string().min(6, "Senha mínima de 6 caracteres"),
+  matricula: z
+    .string()
+    .trim()
+    .min(2, "Informe a matrícula")
+    .max(20, "A matrícula deve ter no máximo 20 caracteres"),
+  password: z
+    .string()
+    .min(6, "A senha deve ter no mínimo 6 caracteres")
+    .max(72, "A senha deve ter no máximo 72 caracteres"),
 });
 
 const signupSchema = loginSchema.extend({
-  nome: z.string().trim().min(2, "Informe o nome completo").max(100),
+  nome: z
+    .string()
+    .trim()
+    .min(2, "Informe o nome completo")
+    .max(100, "O nome deve ter no máximo 100 caracteres"),
   cargo: z.enum(CARGOS, { message: "Selecione o cargo" }),
 });
 

@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 
-import { AppHeader } from "@/components/AppHeader";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,7 +85,6 @@ function HistoricoPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader />
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
         <header>
           <h1 className="text-2xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
