@@ -103,6 +103,22 @@ function ManobraPage() {
   }, [ready, router]);
 
   useEffect(() => {
+    // Verifica se veio um resultado de emergência do painel
+    const emergenciaCache = sessionStorage.getItem("zsm_emergencia_resultado");
+    if (emergenciaCache) {
+      try {
+        const registro = JSON.parse(emergenciaCache) as RegistroManobra;
+        sessionStorage.removeItem("zsm_emergencia_resultado");
+        setAutorizado(registro);
+        setCountdown(10);
+        setStep("resultado");
+      } catch (e) {
+        console.error("Erro ao carregar emergência", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (!autorizado) return;
     if (countdown <= 0) return;
     const t = window.setTimeout(() => setCountdown((c) => c - 1), 1000);
@@ -200,7 +216,7 @@ function ManobraPage() {
 
   const confirmarEmergencia = async (): Promise<void> => {
     if (!emergenciaAssinatura) return;
-    await saveRegistro({
+    const registro = await saveRegistro({
       status: "bloqueada",
       aptidao,
       area,
@@ -209,11 +225,9 @@ function ManobraPage() {
       emergencia: true,
     });
     setEmergenciaOpen(false);
-    setBloqueado({
-      motivo: "PARADA DE EMERGÊNCIA ACIONADA",
-      etapa: "emergencia",
-    });
-    setAutorizado(null);
+    setBloqueado(null);
+    setAutorizado(registro);
+    setCountdown(10);
     setStep("resultado");
   };
 
@@ -343,11 +357,26 @@ function ManobraPage() {
           )}
 
           {step === "resultado" && autorizado && !bloqueado && (
-            <Card className="border-success bg-success/10">
+            <Card className={cn(
+              "border-2",
+              autorizado.emergencia ? "border-danger bg-danger/10" : "border-success bg-success/10"
+            )}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-success">
-                  <CheckCircle2 className="h-7 w-7" />
-                  MANOBRA AUTORIZADA
+                <CardTitle className={cn(
+                  "flex items-center gap-3",
+                  autorizado.emergencia ? "text-danger" : "text-success"
+                )}>
+                  {autorizado.emergencia ? (
+                    <>
+                      <AlertTriangle className="h-7 w-7" />
+                      MANOBRA DE EMERGÊNCIA AUTORIZADA
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-7 w-7" />
+                      MANOBRA AUTORIZADA
+                    </>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">

@@ -136,7 +136,7 @@ function DashboardPage() {
 
   const confirmarEmergencia = async (): Promise<void> => {
     if (!emergenciaAssinatura) return;
-    await saveRegistro({
+    const registro = await saveRegistro({
       status: "bloqueada",
       aptidao: {},
       area: {},
@@ -146,7 +146,10 @@ function DashboardPage() {
     });
     setEmergenciaOpen(false);
     setStatus("bloqueada");
-    await refresh();
+    
+    // Armazena no sessionStorage para que a página de manobra saiba que deve exibir o resultado de emergência
+    sessionStorage.setItem("zsm_emergencia_resultado", JSON.stringify(registro));
+    router.navigate({ to: "/manobra" });
   };
 
   const iniciar = async (): Promise<void> => {
