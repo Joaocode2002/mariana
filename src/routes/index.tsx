@@ -169,7 +169,7 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} Zona Segura de Manobra — Projeto TCC
+        © 2024 Zona Segura de Manobra — Projeto TCC
       </footer>
     </div>
   );
