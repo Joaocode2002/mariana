@@ -188,7 +188,9 @@ function ManobraPage() {
 
   const handleEmergencia = (): void => {
     setEmergenciaAssinatura(null);
-    setEmergenciaOpen(true);
+    // Abre no próximo tick para não colidir com o pointerup do "hold-to-confirm",
+    // evitando que o Radix Dialog interprete como interação externa e feche.
+    setTimeout(() => setEmergenciaOpen(true), 50);
   };
 
   const confirmarEmergencia = async (): Promise<void> => {
@@ -392,7 +394,11 @@ function ManobraPage() {
           if (!o) setEmergenciaAssinatura(null);
         }}
       >
-        <DialogContent className="border-danger">
+        <DialogContent
+          className="border-danger"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-danger">
               <AlertTriangle className="h-5 w-5" />
