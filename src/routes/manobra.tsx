@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronRight, Radio } from "lucide-react";
 
 import { EmergencyButton } from "@/components/EmergencyButton";
+import { SignaturePad } from "@/components/SignaturePad";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,7 @@ const COMUNICACAO: ChecklistItem[] = [
   { id: "supervisor", pergunta: "Supervisor ciente da operação?" },
 ];
 
-type Step = "aptidao" | "area" | "comunicacao" | "resultado";
+type Step = "aptidao" | "area" | "comunicacao" | "assinatura" | "resultado";
 type Respostas = Record<string, boolean>;
 
 function ManobraPage() {
@@ -69,6 +70,7 @@ function ManobraPage() {
   const [aptidao, setAptidao] = useState<Respostas>({});
   const [area, setArea] = useState<Respostas>({});
   const [comunicacao, setComunicacao] = useState<Respostas>({});
+  const [assinatura, setAssinatura] = useState<string | null>(null);
   const [bloqueado, setBloqueado] = useState<{ motivo: string; etapa: string } | null>(null);
   const [autorizado, setAutorizado] = useState<RegistroManobra | null>(null);
   const [countdown, setCountdown] = useState<number>(10);
@@ -98,9 +100,10 @@ function ManobraPage() {
   }, [autorizado, countdown]);
 
   const progresso = useMemo(() => {
-    if (step === "aptidao") return 25;
-    if (step === "area") return 50;
-    if (step === "comunicacao") return 75;
+    if (step === "aptidao") return 20;
+    if (step === "area") return 40;
+    if (step === "comunicacao") return 60;
+    if (step === "assinatura") return 80;
     return 100;
   }, [step]);
 
@@ -137,12 +140,17 @@ function ManobraPage() {
     setStep("comunicacao");
   };
 
-  const handleFinalizar = async (): Promise<void> => {
+  const handleNextComunicacao = (): void => {
     const r = avaliar(COMUNICACAO, comunicacao, "Comunicação Operacional");
     if (!r.ok) {
       void bloquear(r.motivo!, "comunicacao");
       return;
     }
+    setStep("assinatura");
+  };
+
+  const handleFinalizar = async (): Promise<void> => {
+    if (!assinatura) return;
     const registro = await saveRegistro({
       status: "liberada",
       aptidao,
@@ -154,6 +162,7 @@ function ManobraPage() {
     setCountdown(10);
     setStep("resultado");
   };
+
 
   const bloquear = async (motivo: string, etapa: Step): Promise<void> => {
     await saveRegistro({
@@ -239,9 +248,36 @@ function ManobraPage() {
               items={COMUNICACAO}
               respostas={comunicacao}
               onChange={setComunicacao}
-              onNext={handleFinalizar}
-              nextLabel="Finalizar e autorizar"
+              onNext={handleNextComunicacao}
+              nextLabel="Ir para assinatura"
             />
+          )}
+          {step === "assinatura" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-foreground">4. Assinatura Digital</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Ao assinar, você confirma que executou o checklist e assume a
+                  responsabilidade pela manobra.
+                </p>
+                <SignaturePad onChange={setAssinatura} />
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => setStep("comunicacao")}>
+                    Voltar
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    disabled={!assinatura}
+                    onClick={() => void handleFinalizar()}
+                  >
+                    Finalizar e autorizar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {step === "resultado" && bloqueado && (
@@ -271,6 +307,7 @@ function ManobraPage() {
                       setAptidao({});
                       setArea({});
                       setComunicacao({});
+                      setAssinatura(null);
                       setStep("aptidao");
                     }}
                   >
