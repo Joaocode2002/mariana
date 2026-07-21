@@ -137,7 +137,7 @@ function DashboardPage() {
   const confirmarEmergencia = async (): Promise<void> => {
     if (!emergenciaAssinatura) return;
     await saveRegistro({
-      status: "emergencia",
+      status: "bloqueada",
       aptidao: {},
       area: {},
       comunicacao: {},
