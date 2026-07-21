@@ -6,6 +6,14 @@ import { EmergencyButton } from "@/components/EmergencyButton";
 import { SignaturePad } from "@/components/SignaturePad";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import {
@@ -74,6 +82,8 @@ function ManobraPage() {
   const [bloqueado, setBloqueado] = useState<{ motivo: string; etapa: string } | null>(null);
   const [autorizado, setAutorizado] = useState<RegistroManobra | null>(null);
   const [countdown, setCountdown] = useState<number>(10);
+  const [emergenciaOpen, setEmergenciaOpen] = useState(false);
+  const [emergenciaAssinatura, setEmergenciaAssinatura] = useState<string | null>(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -176,7 +186,13 @@ function ManobraPage() {
     setStep("resultado");
   };
 
-  const handleEmergencia = async (): Promise<void> => {
+  const handleEmergencia = (): void => {
+    setEmergenciaAssinatura(null);
+    setEmergenciaOpen(true);
+  };
+
+  const confirmarEmergencia = async (): Promise<void> => {
+    if (!emergenciaAssinatura) return;
     await saveRegistro({
       status: "bloqueada",
       aptidao,
@@ -185,6 +201,7 @@ function ManobraPage() {
       motivosBloqueio: ["MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA"],
       emergencia: true,
     });
+    setEmergenciaOpen(false);
     setBloqueado({
       motivo: "MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA",
       etapa: "emergencia",
@@ -367,6 +384,40 @@ function ManobraPage() {
           {step !== "resultado" && <EmergencyButton onTrigger={handleEmergencia} />}
         </div>
       </main>
+
+      <Dialog
+        open={emergenciaOpen}
+        onOpenChange={(o) => {
+          setEmergenciaOpen(o);
+          if (!o) setEmergenciaAssinatura(null);
+        }}
+      >
+        <DialogContent className="border-danger">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-danger">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmar Parada de Emergência
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação será registrada como interrupção por condição insegura. Assine
+              abaixo para confirmar a responsabilidade.
+            </DialogDescription>
+          </DialogHeader>
+          <SignaturePad onChange={setEmergenciaAssinatura} />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEmergenciaOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!emergenciaAssinatura}
+              onClick={() => void confirmarEmergencia()}
+            >
+              Confirmar emergência
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

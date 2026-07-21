@@ -25,7 +25,7 @@ export function SignaturePad({ onChange }: SignaturePadProps) {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.lineWidth = 2.2;
-    ctx.strokeStyle = "hsl(var(--foreground))";
+    ctx.strokeStyle = "#ffffff";
   }, []);
 
   const getPos = (e: React.PointerEvent<HTMLCanvasElement>) => {
