@@ -147,14 +147,12 @@ function AuthPage() {
                 <SelectTrigger id="cargo">
                   <SelectValue placeholder="Selecione o cargo" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {CARGOS.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
+                <SelectContent position="popper">
+                  {CARGOS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

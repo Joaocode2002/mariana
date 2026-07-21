@@ -120,10 +120,13 @@ function ManobraPage() {
 
   useEffect(() => {
     if (!autorizado) return;
-    if (countdown <= 0) return;
+    if (countdown <= 0) {
+      router.navigate({ to: "/painel" });
+      return;
+    }
     const t = window.setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => window.clearTimeout(t);
-  }, [autorizado, countdown]);
+  }, [autorizado, countdown, router]);
 
   const progresso = useMemo(() => {
     if (step === "aptidao") return 20;
