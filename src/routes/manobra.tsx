@@ -178,13 +178,14 @@ function ManobraPage() {
   };
 
 
-  const bloquear = async (motivo: string, etapa: Step): Promise<void> => {
+  const bloquear = async (motivo: string, etapa: Step, isEmergencia = false): Promise<void> => {
     await saveRegistro({
       status: "bloqueada",
       aptidao,
       area,
       comunicacao,
       motivosBloqueio: [motivo],
+      emergencia: isEmergencia,
     });
     setBloqueado({ motivo, etapa });
     setStep("resultado");
@@ -254,6 +255,7 @@ function ManobraPage() {
               respostas={aptidao}
               onChange={setAptidao}
               onNext={handleNextAptidao}
+              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "aptidao", true)}
             />
           )}
           {step === "area" && (
@@ -263,6 +265,7 @@ function ManobraPage() {
               respostas={area}
               onChange={setArea}
               onNext={handleNextArea}
+              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "area", true)}
             />
           )}
           {step === "comunicacao" && (
@@ -272,6 +275,7 @@ function ManobraPage() {
               respostas={comunicacao}
               onChange={setComunicacao}
               onNext={handleNextComunicacao}
+              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "comunicacao", true)}
               nextLabel="Ir para assinatura"
             />
           )}
@@ -438,6 +442,7 @@ interface ChecklistSectionProps {
   respostas: Respostas;
   onChange: (next: Respostas) => void;
   onNext: () => void;
+  onJump?: () => void;
   nextLabel?: string;
 }
 
@@ -447,14 +452,12 @@ function ChecklistSection({
   respostas,
   onChange,
   onNext,
+  onJump,
   nextLabel = "Próxima etapa",
 }: ChecklistSectionProps) {
   const todasRespondidas = items.every((i) => typeof respostas[i.id] === "boolean");
-  // O usuário solicitou que em caso de manobra interrompida (emergência ou pulo), 
-  // não precise seguir as validações convencionais. 
-  // No contexto do ChecklistSection, permitimos avançar se o botão for de "Pular" ou se o sistema permitir.
-  // Como o usuário quer pular as validações em emergência, vamos adicionar um botão de pular validação.
 
+  return (
     <Card>
       <CardHeader>
         <CardTitle className="text-foreground">{title}</CardTitle>
@@ -485,9 +488,21 @@ function ChecklistSection({
             </div>
           </fieldset>
         ))}
-        <Button onClick={onNext} disabled={!todasRespondidas} size="lg" className="w-full">
-          {nextLabel} <ChevronRight className="ml-1 h-5 w-5" />
-        </Button>
+        <div className="flex flex-col gap-2 pt-2">
+          <Button onClick={onNext} disabled={!todasRespondidas} size="lg" className="w-full">
+            {nextLabel} <ChevronRight className="ml-1 h-5 w-5" />
+          </Button>
+          {onJump && (
+            <Button
+              onClick={onJump}
+              variant="outline"
+              size="sm"
+              className="w-full text-xs text-muted-foreground border-dashed"
+            >
+              Interromper manobra por condição insegura
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
