@@ -201,16 +201,16 @@ function ManobraPage() {
   const confirmarEmergencia = async (): Promise<void> => {
     if (!emergenciaAssinatura) return;
     await saveRegistro({
-      status: "bloqueada",
+      status: "emergencia",
       aptidao,
       area,
       comunicacao,
-      motivosBloqueio: ["MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA"],
+      motivosBloqueio: ["PARADA DE EMERGÊNCIA ACIONADA"],
       emergencia: true,
     });
     setEmergenciaOpen(false);
     setBloqueado({
-      motivo: "MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA",
+      motivo: "PARADA DE EMERGÊNCIA ACIONADA",
       etapa: "emergencia",
     });
     setAutorizado(null);
@@ -255,7 +255,6 @@ function ManobraPage() {
               respostas={aptidao}
               onChange={setAptidao}
               onNext={handleNextAptidao}
-              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "aptidao", true)}
             />
           )}
           {step === "area" && (
@@ -265,7 +264,6 @@ function ManobraPage() {
               respostas={area}
               onChange={setArea}
               onNext={handleNextArea}
-              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "area", true)}
             />
           )}
           {step === "comunicacao" && (
@@ -275,7 +273,6 @@ function ManobraPage() {
               respostas={comunicacao}
               onChange={setComunicacao}
               onNext={handleNextComunicacao}
-              onJump={() => bloquear("MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA", "comunicacao", true)}
               nextLabel="Ir para assinatura"
             />
           )}
@@ -492,16 +489,6 @@ function ChecklistSection({
           <Button onClick={onNext} disabled={!todasRespondidas} size="lg" className="w-full">
             {nextLabel} <ChevronRight className="ml-1 h-5 w-5" />
           </Button>
-          {onJump && (
-            <Button
-              onClick={onJump}
-              variant="outline"
-              size="sm"
-              className="w-full text-xs text-muted-foreground border-dashed"
-            >
-              Interromper manobra por condição insegura
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

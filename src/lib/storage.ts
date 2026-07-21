@@ -13,7 +13,7 @@ export interface Operador {
   cargo: Cargo;
 }
 
-export type StatusManobra = "liberada" | "verificacao" | "bloqueada";
+export type StatusManobra = "liberada" | "verificacao" | "bloqueada" | "emergencia";
 
 export interface RegistroManobra {
   id: string;

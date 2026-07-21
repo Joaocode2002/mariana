@@ -12,12 +12,14 @@ const LABELS: Record<StatusManobra, string> = {
   liberada: "Manobra Liberada",
   verificacao: "Verificação em Andamento",
   bloqueada: "Manobra Bloqueada",
+  emergencia: "Parada de Emergência",
 };
 
 const COLOR: Record<StatusManobra, string> = {
   liberada: "bg-success text-success-foreground",
   verificacao: "bg-warning text-warning-foreground",
   bloqueada: "bg-danger text-danger-foreground",
+  emergencia: "bg-danger text-danger-foreground",
 };
 
 export function getRegistroStatusLabel(

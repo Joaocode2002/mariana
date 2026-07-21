@@ -48,12 +48,14 @@ const STATUS_LABEL: Record<StatusManobra, string> = {
   liberada: "Liberada",
   verificacao: "Em Verificação",
   bloqueada: "Bloqueada",
+  emergencia: "Emergência",
 };
 
 const STATUS_TEXT: Record<StatusManobra, string> = {
   liberada: "text-success",
   verificacao: "text-warning",
   bloqueada: "text-danger",
+  emergencia: "text-danger",
 };
 
 interface PainelCache {
@@ -135,11 +137,11 @@ function DashboardPage() {
   const confirmarEmergencia = async (): Promise<void> => {
     if (!emergenciaAssinatura) return;
     await saveRegistro({
-      status: "bloqueada",
+      status: "emergencia",
       aptidao: {},
       area: {},
       comunicacao: {},
-      motivosBloqueio: ["MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA"],
+      motivosBloqueio: ["PARADA DE EMERGÊNCIA ACIONADA"],
       emergencia: true,
     });
     setEmergenciaOpen(false);
