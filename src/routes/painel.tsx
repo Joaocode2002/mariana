@@ -1,9 +1,19 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-
+import { AlertTriangle } from "lucide-react";
 
 import { EmergencyButton } from "@/components/EmergencyButton";
+import { SignaturePad } from "@/components/SignaturePad";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getRegistroStatusLabel } from "@/components/StatusIndicator";
 import {
   getIndicadores,
@@ -114,6 +124,29 @@ function DashboardPage() {
     await refresh();
   };
 
+  const [emergenciaOpen, setEmergenciaOpen] = useState(false);
+  const [emergenciaAssinatura, setEmergenciaAssinatura] = useState<string | null>(null);
+
+  const handleEmergenciaTrigger = (): void => {
+    setEmergenciaAssinatura(null);
+    setTimeout(() => setEmergenciaOpen(true), 50);
+  };
+
+  const confirmarEmergencia = async (): Promise<void> => {
+    if (!emergenciaAssinatura) return;
+    await saveRegistro({
+      status: "bloqueada",
+      aptidao: {},
+      area: {},
+      comunicacao: {},
+      motivosBloqueio: ["MANOBRA INTERROMPIDA POR CONDIÇÃO INSEGURA"],
+      emergencia: true,
+    });
+    setEmergenciaOpen(false);
+    setStatus("bloqueada");
+    await refresh();
+  };
+
   const iniciar = async (): Promise<void> => {
     const op = await getOperador();
     router.navigate({ to: op ? "/manobra" : "/auth" });
@@ -172,7 +205,7 @@ function DashboardPage() {
             >
               Iniciar Nova Manobra
             </button>
-            <EmergencyButton onTrigger={handleEmergencia} />
+            <EmergencyButton onTrigger={handleEmergenciaTrigger} />
           </div>
 
           {/* Grid de indicadores — divisor estilo Command */}
@@ -227,7 +260,7 @@ function DashboardPage() {
             Iniciar Nova Manobra
           </button>
 
-          <EmergencyButton onTrigger={handleEmergencia} />
+          <EmergencyButton onTrigger={handleEmergenciaTrigger} />
 
           <div className="flex-1 border border-border bg-card p-4">
             <h3 className="mb-4 border-b border-border pb-2 text-xs uppercase tracking-widest text-muted-foreground">
@@ -257,6 +290,44 @@ function DashboardPage() {
           </div>
         </aside>
       </main>
+
+      <Dialog
+        open={emergenciaOpen}
+        onOpenChange={(o) => {
+          setEmergenciaOpen(o);
+          if (!o) setEmergenciaAssinatura(null);
+        }}
+      >
+        <DialogContent
+          className="border-danger"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-danger">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmar Parada de Emergência
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação será registrada como interrupção por condição insegura. Assine
+              abaixo para confirmar a responsabilidade.
+            </DialogDescription>
+          </DialogHeader>
+          <SignaturePad onChange={setEmergenciaAssinatura} />
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEmergenciaOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!emergenciaAssinatura}
+              onClick={() => void confirmarEmergencia()}
+            >
+              Confirmar emergência
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
